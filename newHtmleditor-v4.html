@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WordToHTML Cleaner</title>
+
+<style>
+  :root{
+    --bg: #eef1f6;
+    --bg-grad: radial-gradient(1200px 600px at 10% -10%, #e7edfb 0%, #eef1f6 55%);
+    --card-bg: #ffffff;
+    --card-border: #e1e6ef;
+    --header-bg: #ffffff;
+    --text: #16202e;
+    --muted: #667085;
+    --accent: #2f6fed;
+    --accent-strong: #1f56c9;
+    --accent-soft: #e8f0ff;
+    --success: #1c9d6b;
+    --success-strong: #157d55;
+    --shadow: 0 1px 2px rgba(16,24,40,0.04), 0 6px 20px rgba(16,24,40,0.06);
+    --code-bg: #0f1720;
+    --code-text: #dce6f5;
+    --code-border: #1f2b3a;
+    --doc-bg: #ffffff;
+    --doc-text: #1a2130;
+    --pill-bg: #f1f4f9;
+    --pill-active-text: #ffffff;
+    --focus: #2f6fed;
+  }
+
+  html.dark{
+    --bg: #0b1220;
+    --bg-grad: radial-gradient(1200px 600px at 10% -10%, #131c30 0%, #0b1220 55%);
+    --card-bg: #101828;
+    --card-border: #223049;
+    --header-bg: #0d1524;
+    --text: #e7ecf6;
+    --muted: #93a1b8;
+    --accent: #5b93ff;
+    --accent-strong: #7ba6ff;
+    --accent-soft: #16233d;
+    --success: #34c98a;
+    --success-strong: #2ea877;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+    --code-bg: #0a0f18;
+    --code-text: #dce6f5;
+    --code-border: #1c2738;
+    --doc-bg: #ffffff;
+    --doc-text: #1a2130;
+    --pill-bg: #182338;
+    --pill-active-text: #ffffff;
+    --focus: #7ba6ff;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-grad);
+    color: var(--text);
+    min-height:100vh;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  a{color:var(--accent)}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 22px;
+    background:var(--header-bg);
+    border-bottom:1px solid var(--card-border);
+    position:sticky;top:0;z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-0.01em}
+  .brand-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-strong));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:0 0 auto;
+  }
+  .topbar-actions{display:flex;align-items:center;gap:12px}
+  .icon-btn{
+    width:36px;height:36px;border-radius:999px;border:1px solid var(--card-border);
+    background:var(--card-bg);color:var(--text);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{transform:translateY(-1px)}
+  .avatar{
+    width:34px;height:34px;border-radius:999px;
+    background:linear-gradient(135deg,#8fb4ff,#5b7fe0);
+    color:#fff;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:30px 24px 18px;max-width:1200px;margin:0 auto}
+  .hero h1{
+    margin:0 0 8px;font-size:28px;line-height:1.25;font-weight:800;letter-spacing:-0.015em;
+  }
+  .hero p{margin:0;color:var(--muted);font-size:15px;max-width:640px}
+
+  /* ---------- Layout ---------- */
+  main.grid{
+    max-width:1200px;margin:0 auto;padding:6px 24px 10px;
+    display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  }
+  @media (max-width:940px){
+    main.grid{grid-template-columns:1fr}
+  }
+
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .card-head{
+    padding:14px 16px 4px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  }
+  .card-head h2{margin:0;font-size:14px;font-weight:700}
+
+  .toolbar{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    padding:10px 16px;
+  }
+
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;
+    border:1px solid transparent;cursor:pointer;white-space:nowrap;
+    transition:transform .1s ease, filter .1s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-ghost{
+    background:var(--card-bg);color:var(--text);border-color:var(--card-border);
+  }
+  .btn-ghost:hover{background:var(--pill-bg)}
+  .btn-primary{
+    background:linear-gradient(180deg,var(--success),var(--success-strong));
+    color:#fff;
+  }
+  .btn-primary:hover{filter:brightness(1.04)}
+  .btn-accent{
+    background:linear-gradient(180deg,var(--accent),var(--accent-strong));
+    color:#fff;
+  }
+  .btn-accent:hover{filter:brightness(1.04)}
+
+  .hint{font-size:12px;color:var(--muted)}
+
+  /* toggle switch (auto-copy) */
+  .switch-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;user-select:none}
+  .switch{position:relative;display:inline-block;width:36px;height:20px;flex:0 0 auto}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .switch .slider{
+    position:absolute;inset:0;background:var(--card-border);border-radius:999px;
+    transition:background .15s ease;
+  }
+  .switch .slider::before{
+    content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;
+    background:#fff;border-radius:50%;transition:transform .15s ease;
+    box-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .slider{background:var(--accent)}
+  .switch input:checked + .slider::before{transform:translateX(16px)}
+  .switch input:focus-visible + .slider{outline:2px solid var(--focus);outline-offset:2px}
+
+  /* segmented spacing control */
+  .segment{
+    display:inline-flex;background:var(--pill-bg);border-radius:8px;padding:3px;gap:2px;
+  }
+  .seg-btn{
+    border:0;background:transparent;color:var(--text);
+    font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:6px;cursor:pointer;
+  }
+  .seg-btn.active{
+    background:linear-gradient(180deg,var(--accent),var(--accent-strong));
+    color:var(--pill-active-text);
+  }
+
+  /* document preview */
+  .doc-shell{padding:0 16px 14px}
+  #preview{
+    background:var(--doc-bg);color:var(--doc-text);
+    border:1px solid var(--card-border);
+    border-radius:10px;
+    padding:16px 18px;
+    min-height:220px;
+    outline:none;
+    font-size:14px;line-height:1.55;
+    overflow:auto;
+  }
+  #preview:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  /* collapsible JS-cleaned section */
+  .collapsible{border-top:1px solid var(--card-border)}
+  .collapsible-header{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    background:transparent;border:0;color:var(--muted);
+    font-size:12.5px;font-weight:700;letter-spacing:.01em;
+    padding:10px 16px;cursor:pointer;
+  }
+  .collapsible-header .chev{transition:transform .15s ease;font-size:11px}
+  .collapsible.collapsed .chev{transform:rotate(-90deg)}
+  .collapsible-body{padding:0 16px 14px}
+  .collapsible.collapsed .collapsible-body{display:none}
+
+  pre{
+    white-space:pre-wrap;word-break:break-word;
+    font-family:"SFMono-Regular",Consolas,Menlo,monospace;
+    background:var(--code-bg);color:var(--code-text);
+    border:1px solid var(--code-border);
+    padding:12px 14px;border-radius:10px;
+    min-height:140px;margin:0;font-size:12.5px;line-height:1.55;
+    max-height:340px;overflow:auto;
+  }
+
+  .code-panel{padding:0 16px 12px;flex:1}
+  .code-panel pre{min-height:280px;max-height:none}
+
+  .status-bar{
+    padding:9px 16px;border-top:1px solid var(--card-border);
+    background:var(--card-bg);color:var(--muted);font-size:12.5px;
+  }
+
+  footer.site-footer{
+    text-align:center;color:var(--muted);font-size:12.5px;
+    padding:22px 0 28px;
+  }
+
+  @media (max-width:900px){
+    .code-panel pre{max-height:340px}
+  }
+</style>
+
+<!-- Pyodide script. Internet connection is required for Python cleaner. -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">⇄</span>
+    WordToHTML Cleaner
+  </div>
+  <div class="topbar-actions">
+    <button id="themeToggle" class="icon-btn" type="button" title="Toggle light / dark mode" aria-label="Toggle light / dark mode">🌙</button>
+    <div class="avatar" aria-hidden="true">GD</div>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Google Docs → Exact WordToHTML Cleaner</h1>
+  <p>Paste content copied from Google Docs on the left. The cleaner rebuilds it into WordToHTML-identical markup on the right, ready to drop into your CMS.</p>
+</section>
+
+<main class="grid">
+  <section class="card">
+    <div class="card-head">
+      <h2>Paste here (Google Docs)</h2>
+    </div>
+    <div class="toolbar">
+      <button id="loadSample" class="btn btn-ghost">📄 Load sample</button>
+      <button id="clearBtn" class="btn btn-ghost">🗑 Clear</button>
+      <label class="switch-label">
+        <span class="switch">
+          <input type="checkbox" id="autoClipboard" checked>
+          <span class="slider"></span>
+        </span>
+        Auto-copy
+      </label>
+      <span class="hint">Paste to clean</span>
+    </div>
+
+    <div class="doc-shell">
+      <div id="preview" contenteditable="true" spellcheck="false">
+        <p>Paste your content from Google Docs here (Ctrl+V) — cleaner produces WordToHTML-identical HTML on the right.</p>
+      </div>
+    </div>
+
+    <div class="collapsible" id="jsCollapsible">
+      <button type="button" class="collapsible-header" id="jsToggle">
+        <span>JS-cleaned Intermediate HTML</span>
+        <span class="chev">⌄</span>
+      </button>
+      <div class="collapsible-body" id="jsBody">
+        <pre id="output"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Final (Python-cleaned) Output</h2>
+    </div>
+    <div class="toolbar">
+      <span class="hint">Spacing:</span>
+      <div class="segment">
+        <button id="spacingNone" class="seg-btn active">None</button>
+        <button id="spacingDouble" class="seg-btn">Double</button>
+        <button id="spacingSingle" class="seg-btn">Single</button>
+      </div>
+      <button id="copyFinal" class="btn btn-primary">⧉ Copy Clean HTML</button>
+      <button id="runPyManual" class="btn btn-accent">▶ Run Cleaner</button>
+    </div>
+    <div class="code-panel">
+      <pre id="pyOutput" aria-label="Final Clean HTML output"></pre>
+    </div>
+    <div id="status" class="status-bar">Ready</div>
+  </section>
+</main>
+
+<footer class="site-footer">Copyright © 2026 - Example Web Tool</footer>
+
+<script>
+/* ------------------ Helpers ------------------ */
+function parseStyle(s){
+  const out = {};
+  if(!s) return out;
+  s.split(';').forEach(p=>{
+    const kv = p.split(':');
+    if(kv.length<2) return;
+    const k = kv[0].trim().toLowerCase();
+    const v = kv.slice(1).join(':').trim();
+    if(k) out[k]=v;
+  });
+  return out;
+}
+
+function keepStyleString(styleObj, keys){
+  return keys.filter(k=>styleObj[k]).map(k=>k+':'+styleObj[k]).join(';');
+}
+
+function isBlackColor(c){
+  if(!c) return false;
+  const cc = c.replace(/\s/g,'').toLowerCase();
+  return cc === '#000000' || cc === '#000' || cc === 'rgb(0,0,0)' || cc === 'black';
+}
+
+/* Light safety cleanup before inserting pasted HTML into preview. */
+function removeDangerousHtml(html){
+  if(!html) return '';
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, '')
+    .replace(/\son\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+}
+
+/* wrap helpers */
+function wrapIfNeededElement(parentEl, tagName) {
+  const firstEl = parentEl.firstElementChild;
+  if (parentEl.childElementCount === 1 && firstEl && firstEl.tagName.toLowerCase() === tagName.toLowerCase()) {
+    return;
+  }
+  const wrapper = document.createElement(tagName);
+  while (parentEl.firstChild) wrapper.appendChild(parentEl.firstChild);
+  parentEl.appendChild(wrapper);
+}
+
+function wrapNodeOnce(node, tagName) {
+  if (!node || node.nodeType !== 1) return node;
+  if (node.tagName.toLowerCase() === tagName.toLowerCase()) return node;
+  const w = document.createElement(tagName);
+  w.appendChild(node);
+  return w;
+}
+
+/* ------------------ Core JS cleaner ------------------ */
+function cleanGoogleHTML(rawHtml){
+  if(!rawHtml) return '';
+  rawHtml = rawHtml.replace(/<!--StartFragment-->|<!--EndFragment-->/gi,'').replace(/<meta[^>]*>/gi,'').trim();
+
+  const container = document.createElement('div');
+  container.innerHTML = rawHtml;
+
+  const firstChild = container.firstElementChild;
+  if(firstChild && (firstChild.tagName.toLowerCase()==='b' || firstChild.tagName.toLowerCase()==='font') && container.children.length===1){
+    while(firstChild.firstChild) container.insertBefore(firstChild.firstChild, firstChild);
+    firstChild.remove();
+  }
+
+  function createWrappedChunk(text, styles){
+    const nodeStyles = styles || {};
+    const suppressBold = !!nodeStyles['__noBold'];
+
+    const bold = !suppressBold && (nodeStyles['font-weight'] && (nodeStyles['font-weight'].toLowerCase()==='bold' || parseInt(nodeStyles['font-weight'])>=700));
+    const italic = (nodeStyles['font-style'] && nodeStyles['font-style'].toLowerCase()==='italic');
+    const underline = (nodeStyles['text-decoration'] && nodeStyles['text-decoration'].toLowerCase().includes('underline'));
+
+    const span = document.createElement('span');
+    const allowedKeys = ['font-size','font-family','color'];
+    const sObj = {};
+    allowedKeys.forEach(k => { if(nodeStyles[k]) sObj[k]=nodeStyles[k]; });
+    if(isBlackColor(sObj.color)) delete sObj.color;
+    const sStr = keepStyleString(sObj, allowedKeys);
+    if(sStr) span.setAttribute('style', sStr);
+    span.appendChild(document.createTextNode(text));
+
+    let cur = span;
+    if (underline) {
+      if (!(cur.nodeType===1 && cur.tagName && cur.tagName.toLowerCase()==='u')) {
+        const u = document.createElement('u');
+        u.appendChild(cur);
+        cur = u;
+      }
+    }
+    if (bold) {
+      if (!(cur.nodeType===1 && cur.tagName && cur.tagName.toLowerCase()==='strong')) {
+        const strong = document.createElement('strong');
+        strong.appendChild(cur);
+        cur = strong;
+      }
+    }
+    if (italic) {
+      if (!(cur.nodeType===1 && cur.tagName && cur.tagName.toLowerCase()==='em')) {
+        const em = document.createElement('em');
+        em.appendChild(cur);
+        cur = em;
+      }
+    }
+    return cur;
+  }
+
+  function transform(node, inheritedStyles = {}) {
+    if(node.nodeType === Node.TEXT_NODE) {
+      const text = node.nodeValue;
+      if(!text || text.trim() === '') return null;
+      return createWrappedChunk(text, inheritedStyles);
+    }
+    if(node.nodeType !== Node.ELEMENT_NODE) return null;
+
+    const tag = node.tagName.toLowerCase();
+    if(['meta','style','script','xml'].includes(tag)) return null;
+
+    const nodeStyles = parseStyle(node.getAttribute('style') || '');
+    const merged = Object.assign({}, inheritedStyles, nodeStyles);
+
+    if(/^h[1-6]$/.test(tag)){
+      merged['__noBold'] = true;
+    }
+
+    if(tag === 'a') {
+      const a = document.createElement('a');
+      const href = node.getAttribute('href');
+      if(href) a.setAttribute('href', href);
+
+      const underline = (nodeStyles['text-decoration'] && nodeStyles['text-decoration'].includes('underline')) || node.tagName.toLowerCase()==='u';
+      const keepKeys = ['color','font-size','font-family'];
+      const innerStyles = {};
+      keepKeys.forEach(k => { if(nodeStyles[k]) innerStyles[k] = nodeStyles[k]; });
+      if(isBlackColor(innerStyles.color)) delete innerStyles.color;
+
+      const frag = document.createDocumentFragment();
+      for(const ch of Array.from(node.childNodes)) {
+        const t = transform(ch, merged);
+        if(t) frag.appendChild(t);
+      }
+
+      const span = document.createElement('span');
+      const innerStyleStr = keepStyleString(innerStyles, keepKeys);
+      if(innerStyleStr) span.setAttribute('style', innerStyleStr);
+      while(frag.firstChild) span.appendChild(frag.firstChild);
+
+      if(underline) {
+        if(span.tagName && span.tagName.toLowerCase()==='u') {
+          a.appendChild(span);
+        } else {
+          const u = document.createElement('u');
+          u.appendChild(span);
+          a.appendChild(u);
+        }
+      } else {
+        a.appendChild(span);
+      }
+      return a;
+    }
+
+    if(['p','h1','h2','h3','h4','h5','h6','li'].includes(tag)) {
+      const el = document.createElement(tag);
+      if(merged['text-align']) el.setAttribute('style','text-align:'+merged['text-align']);
+      for(const ch of Array.from(node.childNodes)) {
+        const t = transform(ch, merged);
+        if(t) el.appendChild(t);
+      }
+      if(tag === 'p' && el.textContent.trim() === '' && !el.querySelector('img')) {
+        el.innerHTML = '<br>';
+      }
+      return el;
+    }
+
+    if(['ul','ol','table','tbody','tr','td','th'].includes(tag)) {
+      const el = document.createElement(tag);
+      for(const ch of Array.from(node.childNodes)) {
+        const t = transform(ch, merged);
+        if(t) el.appendChild(t);
+      }
+      return el;
+    }
+
+    const span = document.createElement('span');
+    const allowedKeys = ['font-size','font-family'];
+    const sObj = {};
+    allowedKeys.forEach(k => { if(nodeStyles[k]) sObj[k]=nodeStyles[k]; });
+    if(nodeStyles['color'] && !isBlackColor(nodeStyles['color'])) sObj['color'] = nodeStyles['color'];
+    const sStr = keepStyleString(sObj, ['color','font-size','font-family']);
+    if(sStr) span.setAttribute('style', sStr);
+
+    for(const ch of Array.from(node.childNodes)) {
+      const t = transform(ch, merged);
+      if(t) span.appendChild(t);
+    }
+
+    const hadBold = ( (nodeStyles['font-weight'] && (nodeStyles['font-weight'].toLowerCase()==='bold' || parseInt(nodeStyles['font-weight'])>=700)) || node.tagName.toLowerCase()==='b' || node.tagName.toLowerCase()==='strong' ) && !merged['__noBold'];
+    const hadItalic = (nodeStyles['font-style'] && nodeStyles['font-style'].toLowerCase()==='italic') || node.tagName.toLowerCase()==='i' || node.tagName.toLowerCase()==='em';
+    const hadUnderline = (nodeStyles['text-decoration'] && nodeStyles['text-decoration'].toLowerCase().includes('underline')) || node.tagName.toLowerCase()==='u';
+
+    let current = span;
+    if(hadUnderline) {
+      if(!(current.nodeType===1 && current.tagName && current.tagName.toLowerCase()==='u')) {
+        const u = document.createElement('u'); u.appendChild(current); current = u;
+      }
+    }
+    if(hadBold) {
+      if(!(current.nodeType===1 && current.tagName && current.tagName.toLowerCase()==='strong')) {
+        const strong = document.createElement('strong'); strong.appendChild(current); current = strong;
+      }
+    }
+    if(hadItalic) {
+      if(!(current.nodeType===1 && current.tagName && current.tagName.toLowerCase()==='em')) {
+        const em = document.createElement('em'); em.appendChild(current); current = em;
+      }
+    }
+
+    return current;
+  }
+
+  const cleaned = document.createElement('div');
+  for(const ch of Array.from(container.childNodes)) {
+    const node = transform(ch, {});
+    if(node) cleaned.appendChild(node);
+  }
+
+  let out = cleaned.innerHTML.trim();
+
+  out = out.replace(/<p>\s*<\/p>/gi, '<p><br></p>');
+  out = out.replace(/(<br>\s*){3,}/gi, '<br><br>');
+  out = out.replace(/<span[^>]*>\s*<\/span>/gi, '');
+
+  return out;
+}
+
+function removeTrailingNbspBeforeClosingsAndBreaks(html){
+  if(!html || !html.trim()) return '';
+
+  // String-level cleanup first. This catches serialized HTML like:
+  // &nbsp;<br><br>, &nbsp;</em>, &nbsp;</strong>, &nbsp;</h3>, etc.
+  // It only removes spaces when they are directly before a <br> or a closing tag.
+  html = html
+    .replace(/(?:&nbsp;|&#160;|\u00a0|\s)+(?=<br\b)/gi, '')
+    .replace(/(?:&nbsp;|&#160;|\u00a0|\s)+(?=<\/(?:div|p|h1|h2|h3|h4|h5|h6|strong|em|span|u|a|b|i|li)>)/gi, '');
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  function cleanTrailingTextInsideElement(el){
+    if(!el) return;
+
+    // Clean trailing text nodes directly before the element closing tag.
+    while(el.lastChild && el.lastChild.nodeType === Node.TEXT_NODE){
+      const cleaned = el.lastChild.textContent.replace(/[  ]+$/g, '');
+      if(cleaned){
+        el.lastChild.textContent = cleaned;
+        break;
+      }
+      el.removeChild(el.lastChild);
+    }
+
+    // If the element ends with <br>, clean the text node before the trailing <br> tags.
+    // This fixes: Text&nbsp;<br><br>
+    let node = el.lastChild;
+    while(node && node.nodeType === Node.ELEMENT_NODE && node.tagName.toLowerCase() === 'br'){
+      node = node.previousSibling;
+    }
+    if(node && node.nodeType === Node.TEXT_NODE){
+      node.textContent = node.textContent.replace(/[  ]+$/g, '');
+    }
+  }
+
+  container.querySelectorAll('div, h1, h2, h3, h4, h5, h6').forEach(cleanTrailingTextInsideElement);
+
+  return container.innerHTML
+    .replace(/(?:&nbsp;|&#160;|\u00a0|\s)+(?=<br\b)/gi, '')
+    .replace(/(?:&nbsp;|&#160;|\u00a0|\s)+(?=<\/(?:div|p|h1|h2|h3|h4|h5|h6|strong|em|span|u|a|b|i|li)>)/gi, '')
+    .trim();
+}
+
+function addBottomBreaksFallback(html, count = 4){
+  html = removeTrailingNbspBeforeClosingsAndBreaks(html);
+  if(!html || !html.trim()) return '';
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  let targetDiv = null;
+
+  for(let i = container.childNodes.length - 1; i >= 0; i--){
+    const child = container.childNodes[i];
+    if(child.nodeType === Node.TEXT_NODE && child.textContent.trim() === '') continue;
+    if(child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === 'div'){
+      targetDiv = child;
+    }
+    break;
+  }
+
+  if(!targetDiv){
+    const divs = container.querySelectorAll('div');
+    if(divs.length) targetDiv = divs[divs.length - 1];
+  }
+
+  if(!targetDiv) return container.innerHTML.trim();
+
+  while(targetDiv.lastChild && targetDiv.lastChild.nodeType === Node.ELEMENT_NODE && targetDiv.lastChild.tagName.toLowerCase() === 'br'){
+    targetDiv.removeChild(targetDiv.lastChild);
+  }
+
+  for(let i = 0; i < count; i++){
+    targetDiv.appendChild(document.createElement('br'));
+  }
+
+  return container.innerHTML.trim();
+}
+
+/* ------------------ UI wiring ------------------ */
+const preview = document.getElementById('preview');
+const output = document.getElementById('output');
+const copyFinal = document.getElementById('copyFinal');
+const clearBtn = document.getElementById('clearBtn');
+const loadSample = document.getElementById('loadSample');
+const runPyManual = document.getElementById('runPyManual');
+const pyOutput = document.getElementById('pyOutput');
+const statusEl = document.getElementById('status');
+const autoCheckbox = document.getElementById('autoClipboard');
+
+let latestJsCleaned = '';
+let pyodideReady = false;
+let pyodideLoadingPromise = null;
+let inputTimer = null;
+
+/* ------------------ Spacing post-processing ------------------ */
+/* The Python cleaner produces the base final HTML; we keep it here so the
+   spacing rules can be re-applied (idempotently) whenever the user switches
+   modes or the content re-processes. */
+let basePyCleaned = '';
+let spacingMode = 'none'; // 'none' | 'double' | 'single'
+
+const spacingNoneBtn = document.getElementById('spacingNone');
+const spacingDoubleBtn = document.getElementById('spacingDouble');
+const spacingSingleBtn = document.getElementById('spacingSingle');
+
+/* Variant A — "Double": more breathing room between blocks. */
+function applySpacingDouble(html){
+  if(!html) return '';
+  return html
+    /* 1. </h3><h4>  ->  <br><br></h3><h4>   (breaks go inside the h3) */
+    .replace(/<\/h3>\s*<h4(\b[^>]*)?>/gi, '<br><br></h3><h4$1>')
+    /* 2. </h4><ul>  ->  </h4><ul><br><br> */
+    .replace(/<\/h4>\s*<ul(\b[^>]*)?>/gi, '</h4><ul$1><br><br>')
+    /* 3. </h3><ul>  ->  </h3><ul><br><br> */
+    .replace(/<\/h3>\s*<ul(\b[^>]*)?>/gi, '</h3><ul$1><br><br>')
+    /* 4. </h3><div> ->  </h3><div><br><br> */
+    .replace(/<\/h3>\s*<div(\b[^>]*)?>/gi, '</h3><div$1><br><br>')
+    /* 5. </h4><div> ->  </h4><div><br><br> */
+    .replace(/<\/h4>\s*<div(\b[^>]*)?>/gi, '</h4><div$1><br><br>')
+    /* 6. </div><div> -> </div><div><br> */
+    .replace(/<\/div>\s*<div(\b[^>]*)?>/gi, '</div><div$1><br>');
+}
+
+/* Variant B — "Single": tighter spacing. */
+function applySpacingSingle(html){
+  if(!html) return '';
+  return html
+    /* 1. </h3><h4>  ->  <br><br></h3><h4>   (same as Double) */
+    .replace(/<\/h3>\s*<h4(\b[^>]*)?>/gi, '<br><br></h3><h4$1>')
+    /* 2. </h4><ul>  ->  </h4><ul><br> */
+    .replace(/<\/h4>\s*<ul(\b[^>]*)?>/gi, '</h4><ul$1><br>')
+    /* 3. </h3><ul>  ->  </h3><ul><br> */
+    .replace(/<\/h3>\s*<ul(\b[^>]*)?>/gi, '</h3><ul$1><br>')
+    /* 4. </h3><div> ->  </h3><div><br> */
+    .replace(/<\/h3>\s*<div(\b[^>]*)?>/gi, '</h3><div$1><br>')
+    /* 5. </h4><div> ->  </h4><div><br> */
+    .replace(/<\/h4>\s*<div(\b[^>]*)?>/gi, '</h4><div$1><br>');
+    /* 6. </div><div> -> unchanged (no break added) */
+}
+
+function applySpacing(html, mode){
+  if(!html) return '';
+  if(mode === 'double') return applySpacingDouble(html);
+  if(mode === 'single') return applySpacingSingle(html);
+  return html;
+}
+
+function updateSpacingButtonsUI(){
+  [spacingNoneBtn, spacingDoubleBtn, spacingSingleBtn].forEach(b => b && b.classList.remove('active'));
+  const map = { none: spacingNoneBtn, double: spacingDoubleBtn, single: spacingSingleBtn };
+  if(map[spacingMode]) map[spacingMode].classList.add('active');
+}
+
+/* Render the stored base output with the currently selected spacing applied. */
+function renderFinalOutput(){
+  pyOutput.textContent = applySpacing(basePyCleaned, spacingMode);
+  updateSpacingButtonsUI();
+}
+
+function setSpacingMode(mode){
+  spacingMode = mode;
+  renderFinalOutput();
+}
+
+if(spacingNoneBtn)   spacingNoneBtn.addEventListener('click', () => setSpacingMode('none'));
+if(spacingDoubleBtn) spacingDoubleBtn.addEventListener('click', () => setSpacingMode('double'));
+if(spacingSingleBtn) spacingSingleBtn.addEventListener('click', () => setSpacingMode('single'));
+
+function setStatus(message){
+  if(statusEl) statusEl.textContent = message;
+}
+
+function updateCleanedOnly(){
+  const raw = preview.innerHTML || '';
+  const cleaned = cleanGoogleHTML(raw);
+  output.textContent = cleaned;
+  latestJsCleaned = cleaned;
+  return cleaned;
+}
+
+async function processContent({copyAfter = false} = {}){
+  const cleaned = updateCleanedOnly();
+
+  if(!cleaned.trim()) {
+    pyOutput.textContent = '';
+    setStatus('Ready');
+    return;
+  }
+
+  try {
+    await runPythonCleanerFromJS(cleaned);
+    if(copyAfter && autoCheckbox && autoCheckbox.checked){
+      await copyFinalOutputToClipboard();
+    }
+  } catch (err) {
+    console.warn('Cleaner failed:', err);
+    basePyCleaned = addBottomBreaksFallback(cleaned, 4);
+    renderFinalOutput();
+    setStatus('Python cleaner failed. Showing JS-cleaned fallback.');
+  }
+}
+
+preview.addEventListener('paste', async (e) => {
+  e.preventDefault();
+
+  let html = '';
+  if(e.clipboardData){
+    html = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain') || '';
+  }
+
+  if(!html && navigator.clipboard && navigator.clipboard.readText) {
+    try { html = await navigator.clipboard.readText(); } catch {}
+  }
+
+  if(html) preview.innerHTML = removeDangerousHtml(html);
+
+  setTimeout(() => {
+    processContent({copyAfter:true});
+  }, 10);
+});
+
+preview.addEventListener('input', () => {
+  clearTimeout(inputTimer);
+  inputTimer = setTimeout(() => {
+    processContent({copyAfter:false});
+  }, 250);
+});
+
+clearBtn.addEventListener('click', ()=>{
+  preview.innerHTML = '<p></p>';
+  output.textContent='';
+  pyOutput.textContent='';
+  latestJsCleaned='';
+  basePyCleaned='';
+  setStatus('Ready');
+});
+
+const sample = `<!--StartFragment--><meta charset="utf-8"><b><p style="text-align:center"><em>hoto Courtesy of Unsplash</em></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;text-decoration:none;white-space:pre;white-space:pre-wrap;">Southern Utah's red rock country is best known for its famous parks, but St. George and its surrounding areas are filled with remarkable places that many visitors overlook. Beyond the main attractions lies a landscape rich in subtle beauty—peaceful gardens, </span><a href="https://stgeorgeluxuryhomesales.com/" style="text-decoration:none;"><span style="font-size:11pt;font-family:Arial,sans-serif;color:#1155cc;background-color:transparent;font-weight:400;font-style:normal;text-decoration:underline;">Dustin &amp; Angie Hammer</span></a><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;text-decoration:none;white-space:pre;white-space:pre-wrap;"> hidden canyons, and colorful cliffs that tell the story of the desert in quieter tones. These destinations offer a more </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:italic;text-decoration:none;white-space:pre;white-space:pre-wrap;">personal</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;text-decoration:none;white-space:pre;white-space:pre-wrap;"> way to experience the region, ideal for those who prefer scenic exploration without the crowds. This guide unveils some of the most underrated spots worth discovering in and around St. George.</span></p><!--EndFragment-->`;
+
+loadSample.addEventListener('click', ()=>{
+  preview.innerHTML = sample;
+  setTimeout(() => processContent({copyAfter:false}), 10);
+});
+
+updateCleanedOnly();
+
+async function copyFinalOutputToClipboard() {
+  const txt = (pyOutput.textContent || output.textContent || '').trim();
+  if (!txt) return;
+
+  try {
+    await navigator.clipboard.writeText(txt);
+    setStatus('Copied cleaned HTML to clipboard.');
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    setStatus('Copied cleaned HTML to clipboard.');
+  }
+}
+</script>
+
+<!-- ------------------ Pyodide + Python cleaner integration ------------------ -->
+<script id="pycode" type="text/plain">
+# Pyodide-friendly Python cleaner (NO tkinter)
+from bs4 import BeautifulSoup, NavigableString
+import copy
+import re
+
+
+def normalize_headers(soup):
+    header_tags = ['h1','h2','h3','h4','h5','h6']
+    headers = soup.find_all(header_tags)
+
+    if not headers:
+        return
+
+    found_levels = {tag.name for tag in headers}
+    has_h1_or_h2 = bool(found_levels.intersection({'h1', 'h2'}))
+    has_h3 = 'h3' in found_levels
+    has_h4 = 'h4' in found_levels
+
+    # Header rules:
+    # Final output should only use h3 and h4.
+    #
+    # If the Google Doc already has h4, preserve the existing h3/h4 structure:
+    #   h1 + h3 + h4  => h1 -> h3, h3 stays h3, h4 stays h4
+    #   h2 + h3 + h4  => h2 -> h3, h3 stays h3, h4 stays h4
+    #
+    # If the Google Doc has h1/h2 plus h3 but NO h4, treat h3 as the lower level:
+    #   h1 + h3       => h1 -> h3, h3 -> h4
+    #   h2 + h3       => h2 -> h3, h3 -> h4
+    #   h1 + h2 + h3  => h1 -> h3, h2 -> h3, h3 -> h4
+    #
+    # If the Google Doc already only uses h3/h4, keep them as-is.
+    for tag in headers:
+        original_name = tag.name
+
+        if has_h4:
+            if original_name in ['h1', 'h2']:
+                tag.name = 'h3'
+            elif original_name == 'h3':
+                tag.name = 'h3'
+            else:
+                # h4 stays h4; h5/h6 are reduced to h4.
+                tag.name = 'h4'
+
+        elif has_h1_or_h2 and has_h3:
+            if original_name in ['h1', 'h2']:
+                tag.name = 'h3'
+            else:
+                # h3/h4/h5/h6 become h4 when h1/h2 are the main headers and no h4 exists.
+                tag.name = 'h4'
+
+        else:
+            if original_name in ['h1', 'h2', 'h3']:
+                tag.name = 'h3'
+            else:
+                tag.name = 'h4'
+
+    # Apply CMS heading spacing rules.
+    for tag in soup.find_all(['h3','h4']):
+        if tag.name == 'h3':
+            tag['style'] = 'padding-top: 15px; margin-top: 15px;'
+
+        elif tag.name == 'h4':
+            prev = tag.previous_sibling
+
+            # skip text nodes
+            while prev and (isinstance(prev, NavigableString) or not getattr(prev, "name", None)):
+                prev = getattr(prev, 'previous_sibling', None)
+
+            if prev and getattr(prev, 'name', None) == 'h3':
+                # directly after h3 → NO style
+                tag.attrs.pop('style', None)
+            else:
+                tag['style'] = 'padding-top: 15px; margin-top: 15px;'
+
+
+def clean_html(input_html):
+    soup = BeautifulSoup(input_html or '', 'html.parser')
+    for tag in soup.find_all(True):
+        for attr in ['dir', 'aria-level', 'role', 'style']:
+            tag.attrs.pop(attr, None)
+
+    for a in list(soup.find_all('a')):
+        if a.find('u'):
+            for u in list(a.find_all('u')):
+                try:
+                    u.unwrap()
+                except Exception:
+                    u.replace_with(u.get_text())
+
+        parent = a.parent
+        parent_style = parent.get('style') if parent and getattr(parent, 'name', None) == 'span' else None
+        already_underlined = (
+            parent is not None and (
+                getattr(parent, 'name', None) == 'u'
+                or (getattr(parent, 'name', None) == 'span' and parent_style and 'text-decoration' in parent_style)
+            )
+        )
+        if not already_underlined:
+            u_tag = soup.new_tag('u')
+            parent = a.parent
+            if parent is None:
+                continue
+            index = None
+            for idx, child in enumerate(list(parent.contents)):
+                if child is a:
+                    index = idx
+                    break
+            if index is None:
+                try:
+                    a.replace_with(u_tag)
+                    u_tag.append(a)
+                except Exception:
+                    continue
+            else:
+                parent.insert(index, u_tag)
+                try:
+                    a.extract()
+                except Exception:
+                    continue
+                u_tag.append(a)
+
+        a['target'] = '_blank'
+        a['rel'] = 'noopener'
+
+    for hr in soup.find_all('hr'):
+        hr.decompose()
+
+    for span in soup.find_all('span'):
+        if not span.get_text(strip=True):
+            span.decompose()
+    for strong in soup.find_all('strong'):
+        if not strong.get_text(strip=True):
+            strong.decompose()
+
+    inline_wrappers = {'span', 'strong', 'em', 'b', 'i', 'u', 'a'}
+    for p in list(soup.find_all('p')):
+        parent = p.parent
+        while parent and getattr(parent, 'name', None) in inline_wrappers:
+            next_parent = parent.parent
+            try:
+                parent.unwrap()
+            except Exception:
+                break
+            parent = next_parent
+
+    normalize_headers(soup)
+
+    # Ensure headers do NOT contain bold wrappers (strong / b).
+    for header in soup.find_all(['h1','h2','h3','h4','h5','h6']):
+        for bold_tag in header.find_all(['strong','b']):
+            try:
+                bold_tag.unwrap()
+            except Exception:
+                try:
+                    bold_tag.replace_with(bold_tag.get_text())
+                except Exception:
+                    pass
+
+    for ul in soup.find_all('ul'):
+        for li in ul.find_all('li', recursive=False):
+            # Keep <li> content directly inside the <li> (no <p>/<div> wrapper).
+            for wrapper in li.find_all(['p', 'div'], recursive=False):
+                wrapper.unwrap()
+
+    body = soup.body or soup
+    new_content = []
+    buffer_paragraphs = []
+
+    def clean_p_content(p):
+        text = p.get_text(strip=True)
+        return None if text == '' or text == '\xa0' else p
+
+    def merge_paragraphs(paragraphs):
+        div = soup.new_tag('div')
+        for idx, p in enumerate(paragraphs):
+            cleaned_p = clean_p_content(p)
+            if not cleaned_p:
+                continue
+            if idx > 0:
+                div.append(soup.new_tag('br'))
+                div.append(soup.new_tag('br'))
+            for child in cleaned_p.contents:
+                div.append(copy.copy(child))
+        return div if div.contents else None
+
+    def flush_buffer():
+        nonlocal buffer_paragraphs
+        if buffer_paragraphs:
+            merged = merge_paragraphs(buffer_paragraphs)
+            if merged:
+                new_content.append(merged)
+            buffer_paragraphs = []
+
+    for tag in list(body.contents):
+        if isinstance(tag, NavigableString):
+            continue
+        if getattr(tag, 'name', None) in ['h3', 'h4']:
+            flush_buffer()
+            new_content.append(tag)
+        elif getattr(tag, 'name', None) == 'p':
+            buffer_paragraphs.append(tag)
+        else:
+            flush_buffer()
+            new_content.append(tag)
+
+    flush_buffer()
+
+    body.clear()
+    for el in new_content:
+        body.append(el)
+
+    def remove_trailing_space_nbsp(tag):
+        for i, child in enumerate(list(tag.contents)):
+            if isinstance(child, NavigableString):
+                next_sibling = tag.contents[i + 1] if i + 1 < len(tag.contents) else None
+                if next_sibling and getattr(next_sibling, 'name', None) == 'br':
+                    new_text = re.sub(r'[ \xa0]+$', '', str(child))
+                    if new_text != str(child):
+                        try:
+                            child.replace_with(new_text)
+                        except Exception:
+                            try:
+                                tag.contents[i].replace_with(new_text)
+                            except Exception:
+                                pass
+            elif hasattr(child, 'contents'):
+                remove_trailing_space_nbsp(child)
+
+    for div_tag in soup.find_all('div'):
+        remove_trailing_space_nbsp(div_tag)
+
+    def fix_missing_spaces(soup):
+        def ensure_space_after(node):
+            if isinstance(node, NavigableString):
+                s = str(node)
+                if not s.endswith((' ', '\xa0', '\n')):
+                    try:
+                        node.replace_with(s + ' ')
+                    except Exception:
+                        parent = node.parent
+                        if parent:
+                            for idx, ch in enumerate(list(parent.contents)):
+                                if ch is node:
+                                    parent.contents[idx].replace_with(s + ' ')
+                                    break
+                return
+
+            last = None
+            current = node
+            while True:
+                if not getattr(current, 'contents', None):
+                    break
+                last_candidate = current.contents[-1]
+                if isinstance(last_candidate, NavigableString):
+                    last = last_candidate
+                    break
+                current = last_candidate
+                if current is node:
+                    break
+
+            if last is not None:
+                s = str(last)
+                if not s.endswith((' ', '\xa0', '\n')):
+                    try:
+                        last.replace_with(s + ' ')
+                    except Exception:
+                        try:
+                            node.append(' ')
+                        except Exception:
+                            pass
+            else:
+                try:
+                    node.append(' ')
+                except Exception:
+                    pass
+
+        for a in soup.find_all('a'):
+            candidate = a.previous_sibling
+            curr = a
+            while candidate is None and getattr(curr, 'parent', None):
+                curr = curr.parent
+                candidate = curr.previous_sibling
+
+            if candidate:
+                ensure_space_after(candidate)
+    fix_missing_spaces(soup)
+
+    def remove_duplicate_wrappers(soup):
+        changed = True
+        while changed:
+            changed = False
+            for name in ('strong', 'em', 'u'):
+                for tag in list(soup.find_all(name)):
+                    if tag.find_parent(name):
+                        try:
+                            tag.unwrap()
+                        except Exception:
+                            try:
+                                tag.replace_with(''.join(str(c) for c in tag.contents))
+                            except Exception:
+                                pass
+                        changed = True
+
+        changed = True
+        while changed:
+            changed = False
+            for span in list(soup.find_all('span')):
+                if (not span.attrs) and len(span.contents) == 1 and getattr(span.contents[0], 'name', None) == 'span' and not span.contents[0].attrs:
+                    try:
+                        inner = span.contents[0]
+                        inner.unwrap()
+                        changed = True
+                    except Exception:
+                        pass
+
+        for span in list(soup.find_all('span')):
+            if not span.attrs:
+                children = [c for c in span.contents if not (isinstance(c, NavigableString) and str(c).strip() == '')]
+                if len(children) == 1 and (isinstance(children[0], NavigableString) or getattr(children[0], 'name', None) == 'span'):
+                    try:
+                        span.unwrap()
+                    except Exception:
+                        pass
+    remove_duplicate_wrappers(soup)
+
+    # Remove trailing normal spaces and non-breaking spaces before closing tags
+    # and before trailing <br> tags.
+    # Fixes examples like:
+    #   Text&nbsp;</div>
+    #   Text&nbsp;<br><br>
+    #   Header&nbsp;</h3>
+    #   Header&nbsp;</h4>
+    def remove_trailing_space_before_closings_and_breaks(soup):
+        target_tags = ['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'span', 'u', 'a', 'b', 'i', 'li']
+
+        for tag in soup.find_all(target_tags):
+            while tag.contents:
+                last = tag.contents[-1]
+
+                if isinstance(last, NavigableString):
+                    cleaned = re.sub(r'[   ]+$', '', str(last))
+                    if cleaned:
+                        if cleaned != str(last):
+                            last.replace_with(cleaned)
+                        break
+                    else:
+                        last.extract()
+                        continue
+
+                # If the tag ends with <br>, clean the text node before the trailing <br> tags.
+                if getattr(last, 'name', None) == 'br':
+                    idx = len(tag.contents) - 2
+                    while idx >= 0 and getattr(tag.contents[idx], 'name', None) == 'br':
+                        idx -= 1
+                    if idx >= 0 and isinstance(tag.contents[idx], NavigableString):
+                        cleaned = re.sub(r'[   ]+$', '', str(tag.contents[idx]))
+                        if cleaned != str(tag.contents[idx]):
+                            tag.contents[idx].replace_with(cleaned)
+                    break
+
+                break
+
+    remove_trailing_space_before_closings_and_breaks(soup)
+
+    # Add exactly 4 <br> tags before the closing tag of the final/bottom top-level div.
+    # Example output: <div>Text<br/><br/><br/><br/></div>
+    def add_bottom_breaks_to_bottom_div(body, count=4):
+        target_div = None
+
+        # Prefer the last top-level div at the bottom of the cleaned output.
+        for child in reversed(list(body.contents)):
+            if isinstance(child, NavigableString):
+                if str(child).strip() == '':
+                    continue
+                break
+            if getattr(child, 'name', None) == 'div':
+                target_div = child
+                break
+            if getattr(child, 'name', None):
+                break
+
+        # Fallback: use the last div in the document if no top-level bottom div is found.
+        if target_div is None:
+            all_divs = body.find_all('div') if hasattr(body, 'find_all') else []
+            if all_divs:
+                target_div = all_divs[-1]
+
+        if target_div is None:
+            return
+
+        # Remove existing trailing br tags first, then add exactly 3.
+        while target_div.contents and getattr(target_div.contents[-1], 'name', None) == 'br':
+            target_div.contents[-1].extract()
+
+        for _ in range(count):
+            target_div.append(soup.new_tag('br'))
+
+    add_bottom_breaks_to_bottom_div(body, 4)
+
+    final_html = str(soup)
+
+    # Final string-level cleanup after serialization.
+    # This catches literal &nbsp; entities that may appear before <br> or closing tags.
+    final_html = re.sub(
+        r'(?:&nbsp;|&#160;|\u00a0|\s)+(?=<br\b)',
+        '',
+        final_html,
+        flags=re.IGNORECASE
+    )
+    final_html = re.sub(
+        r'(?:&nbsp;|&#160;|\u00a0|\s)+(?=</(?:div|p|h1|h2|h3|h4|h5|h6|strong|em|span|u|a|b|i|li)>)',
+        '',
+        final_html,
+        flags=re.IGNORECASE
+    )
+
+    # Add two <br> tags before a closing </div> when it is immediately
+    # followed by a <ul> list. Handles both:
+    #   </div><ul>      ->  <br/><br/></div><ul>
+    #   </div>\n<ul>    ->  <br/><br/></div>\n<ul>
+    # The negative lookbehinds keep this idempotent: if a <br> already sits
+    # right before the </div>, nothing is added. Everything else is unchanged.
+    final_html = re.sub(
+        r'(?<!<br/>)(?<!<br>)(</div>)(\s*)(<ul\b)',
+        r'<br/><br/>\1\2\3',
+        final_html,
+        flags=re.IGNORECASE
+    )
+
+    return final_html
+
+
+# Pyodide expects a global variable we can read from JS
+cleaned_html = clean_html(input_html if 'input_html' in globals() else '')
+</script>
+
+<script>
+/* ------------------ Pyodide loader + bridge ------------------ */
+async function ensurePyodide(){
+  if(window.pyodide && pyodideReady) return window.pyodide;
+  if(pyodideLoadingPromise) return pyodideLoadingPromise;
+
+  pyodideLoadingPromise = (async () => {
+    document.body.style.cursor = 'wait';
+    setStatus('Loading Python cleaner...');
+
+    window.pyodide = await loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'});
+    await pyodide.loadPackage('micropip');
+    await pyodide.runPythonAsync("import micropip; await micropip.install('beautifulsoup4')");
+
+    document.body.style.cursor = 'default';
+    pyodideReady = true;
+    window.pyodideReady = true;
+    setStatus('Python cleaner ready.');
+    return window.pyodide;
+  })().catch((e) => {
+    document.body.style.cursor = 'default';
+    pyodideReady = false;
+    pyodideLoadingPromise = null;
+    setStatus('Python cleaner failed to load.');
+    throw e;
+  });
+
+  return pyodideLoadingPromise;
+}
+
+async function runPythonCleanerFromJS(jsCleanedHtml){
+  try{
+    setStatus('Cleaning with Python...');
+    await ensurePyodide();
+    pyodide.globals.set('input_html', jsCleanedHtml);
+    const pyScript = document.getElementById('pycode').textContent;
+    await pyodide.runPythonAsync(pyScript);
+    const cleanedProxy = pyodide.globals.get('cleaned_html');
+    let cleaned = '';
+    try {
+      cleaned = (cleanedProxy && typeof cleanedProxy.toString === 'function') ? cleanedProxy.toString() : String(cleanedProxy);
+    } finally {
+      if (cleanedProxy && typeof cleanedProxy.destroy === 'function') {
+        try { cleanedProxy.destroy(); } catch(e){ /* ignore */ }
+      }
+    }
+    basePyCleaned = addBottomBreaksFallback(cleaned, 4);
+    renderFinalOutput();
+    setStatus('Done.');
+  }catch(e){
+    console.error(e);
+    basePyCleaned = addBottomBreaksFallback(jsCleanedHtml || '', 4);
+    if(basePyCleaned){
+      renderFinalOutput();
+    } else {
+      pyOutput.textContent = 'Python cleaner failed: ' + e;
+    }
+    setStatus('Python cleaner failed. Showing fallback output with 4 bottom breaks.');
+  }
+}
+
+runPyManual.addEventListener('click', ()=>{
+  const jsHtml = output.textContent || updateCleanedOnly();
+  runPythonCleanerFromJS(jsHtml);
+});
+
+copyFinal.addEventListener('click', async () => {
+  const txt = pyOutput.textContent || output.textContent || '';
+  if(!txt) return;
+  try{
+    await navigator.clipboard.writeText(txt);
+    copyFinal.textContent = 'Copied!';
+    setStatus('Copied cleaned HTML to clipboard.');
+    setTimeout(()=>copyFinal.textContent='⧉ Copy Clean HTML',900);
+  }catch(e){
+    const range = document.createRange();
+    range.selectNodeContents(pyOutput.textContent ? pyOutput : output);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    copyFinal.textContent = 'Copied!';
+    setStatus('Copied cleaned HTML to clipboard.');
+    setTimeout(()=>copyFinal.textContent='⧉ Copy Clean HTML',900);
+  }
+});
+</script>
+
+<script>
+/* ------------------ Light / dark theme toggle (design only) ------------------ */
+(function(){
+  const root = document.documentElement;
+  const toggleBtn = document.getElementById('themeToggle');
+
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      root.classList.add('dark');
+      if(toggleBtn) toggleBtn.textContent = '☀️';
+    } else {
+      root.classList.remove('dark');
+      if(toggleBtn) toggleBtn.textContent = '🌙';
+    }
+  }
+
+  let saved = null;
+  try { saved = localStorage.getItem('wth-theme'); } catch(e) {}
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+
+  if(toggleBtn){
+    toggleBtn.addEventListener('click', () => {
+      const next = root.classList.contains('dark') ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem('wth-theme', next); } catch(e) {}
+    });
+  }
+})();
+
+/* ------------------ Collapsible JS-cleaned intermediate panel (design only) ------------------ */
+(function(){
+  const wrap = document.getElementById('jsCollapsible');
+  const btn = document.getElementById('jsToggle');
+  if(btn && wrap){
+    btn.addEventListener('click', () => {
+      wrap.classList.toggle('collapsed');
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
