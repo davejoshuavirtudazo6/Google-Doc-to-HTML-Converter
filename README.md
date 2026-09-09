@@ -4,7 +4,8 @@ Paste content copied from **Google Docs** and get back clean, **WordToHTML-style
 
 Runs entirely in the browser as a single HTML file. No build step, no backend, no server-side dependencies.
 
-> 💡 Add a screenshot of the tool here once you have one, e.g. `![Preview](docs/preview.png)`.
+<img width="1915" height="893" alt="image" src="https://github.com/user-attachments/assets/9e574029-16e2-4184-a27c-217e4501cd76" />
+
 
 ## Features
 
